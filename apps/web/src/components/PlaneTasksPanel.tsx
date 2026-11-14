@@ -2,11 +2,12 @@ import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { scopeProjectRef, scopedProjectKey } from "@t3tools/client-runtime/environment";
 import type { PlaneIssue, PlaneSnapshot, ScopedProjectRef } from "@t3tools/contracts";
 import * as Cause from "effect/Cause";
-import { AsyncResult } from "effect/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 import { ArrowLeftIcon, ArrowUpRightIcon, ListTodoIcon, RefreshCwIcon } from "lucide-react";
 import { useState } from "react";
 import { useHandleNewThread, useNewThreadHandler } from "../hooks/useHandleNewThread";
 import { planeAvailable, planeTasks } from "../state/projects";
+import { appAtomRegistry } from "../rpc/atomRegistry";
 import ChatMarkdown from "./ChatMarkdown";
 import { Button } from "./ui/button";
 import { Dialog, DialogDescription, DialogHeader, DialogPopup, DialogTitle } from "./ui/dialog";
@@ -21,6 +22,35 @@ const PRIORITY_LABELS: Record<string, string> = {
   low: "Низкий приоритет",
   none: "Без приоритета",
 };
+
+const planePanelProject = Atom.make<ScopedProjectRef | null>(null);
+
+export function PlaneTasksDialog() {
+  const projectRef = useAtomValue(planePanelProject);
+  const close = () => appAtomRegistry.set(planePanelProject, null);
+  return (
+    <Dialog
+      open={projectRef !== null}
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <DialogPopup aria-label="Задачи DINO" className="h-[min(46rem,90dvh)] max-w-5xl">
+        <DialogHeader>
+          <DialogTitle>Задачи DINO</DialogTitle>
+          <DialogDescription>Plane · задачи рядом с кодом</DialogDescription>
+        </DialogHeader>
+        {projectRef ? (
+          <PlaneTaskBrowser
+            key={scopedProjectKey(projectRef)}
+            projectRef={projectRef}
+            onClose={close}
+          />
+        ) : null}
+      </DialogPopup>
+    </Dialog>
+  );
+}
 
 export function PlaneTasksButton({
   projectRef: selectedProjectRef,
@@ -44,27 +74,17 @@ function ProjectPlaneTasks({ projectRef }: { projectRef: ScopedProjectRef }) {
       input: { projectId: projectRef.projectId },
     }),
   );
-  const [open, setOpen] = useState(false);
   if (!AsyncResult.isSuccess(available) || !available.value) return null;
   return (
-    <>
-      <div className="pt-2">
-        <Button variant="ghost-muted" size="sm" onClick={() => setOpen(true)}>
-          <ListTodoIcon /> Задачи DINO <span className="text-xs text-muted-foreground">Plane</span>
-        </Button>
-      </div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogPopup aria-label="Задачи DINO" className="h-[min(46rem,90dvh)] max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>Задачи DINO</DialogTitle>
-            <DialogDescription>Plane · задачи рядом с кодом</DialogDescription>
-          </DialogHeader>
-          {open ? (
-            <PlaneTaskBrowser projectRef={projectRef} onClose={() => setOpen(false)} />
-          ) : null}
-        </DialogPopup>
-      </Dialog>
-    </>
+    <div className="pt-2">
+      <Button
+        variant="ghost-muted"
+        size="sm"
+        onClick={() => appAtomRegistry.set(planePanelProject, projectRef)}
+      >
+        <ListTodoIcon /> Задачи DINO <span className="text-xs text-muted-foreground">Plane</span>
+      </Button>
+    </div>
   );
 }
 
