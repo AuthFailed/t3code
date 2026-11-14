@@ -168,6 +168,7 @@ import { isScratchProject } from "@t3tools/client-runtime/state/projects";
 import { cn } from "~/lib/utils";
 import { ProjectEnvironmentBadge } from "./ProjectEnvironmentBadge";
 import { ProjectRowActions } from "./ProjectComboboxRow";
+import { PlaneTasksButton } from "./PlaneTasksPanel";
 import {
   buildDraftActionMenuItems,
   buildThreadActionMenuItems,
@@ -3189,6 +3190,9 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               searchResultCount={threadSearchResults.length}
               activeSearchResultIndex={activeSearchResultIndex}
               onClearSearch={clearThreadSearch}
+            />
+            <PlaneTasksButton
+              projectRef={scopedProjectRefs.length === 1 ? scopedProjectRefs[0] : undefined}
             />
           </SidebarGroup>
         }

@@ -26,6 +26,19 @@ export const projectContentSearch = createEnvironmentRpcQueryAtomFamily(connecti
   idleTtlMs: 60_000,
 });
 
+export const planeAvailable = createEnvironmentRpcQueryAtomFamily(connectionAtomRuntime, {
+  label: "environment-data:plane:available",
+  tag: WS_METHODS.planeAvailable,
+  staleTimeMs: 60_000,
+});
+
+export const planeTasks = createEnvironmentRpcQueryAtomFamily(connectionAtomRuntime, {
+  label: "environment-data:plane:tasks",
+  tag: WS_METHODS.planeRead,
+  staleTimeMs: 30_000,
+  idleTtlMs: 60_000,
+});
+
 export const defaultProjectFallbackReadyAtom = Atom.family((projectKey: string | null) =>
   Atom.make((get) => {
     const remembered = projectKey === null ? null : parseScopedProjectKey(projectKey);

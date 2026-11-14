@@ -34,6 +34,7 @@ import {
   ChatGptHandoffState,
 } from "./providerSetup.ts";
 import * as Schema from "effect/Schema";
+import { PlaneReadError, PlaneReadInput, PlaneSnapshot } from "./plane.ts";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
@@ -415,6 +416,8 @@ import { VcsError } from "./vcs.ts";
 import { Project, ProjectMutation, ProjectMutationError } from "./project.ts";
 
 export const WS_METHODS = {
+  planeAvailable: "plane.available",
+  planeRead: "plane.read",
   projectsListEntries: "projects.listEntries",
   projectsListIgnoredFiles: "projects.listIgnoredFiles",
   projectsReadFile: "projects.readFile",
@@ -2111,6 +2114,16 @@ export class RpcScopeAuthorization extends RpcMiddleware.Service<RpcScopeAuthori
 ) {}
 
 export const WsRpcGroup = RpcGroup.make(
+  Rpc.make(WS_METHODS.planeAvailable, {
+    payload: PlaneReadInput,
+    success: Schema.Boolean,
+    error: EnvironmentAuthorizationError,
+  }),
+  Rpc.make(WS_METHODS.planeRead, {
+    payload: PlaneReadInput,
+    success: PlaneSnapshot,
+    error: Schema.Union([PlaneReadError, EnvironmentAuthorizationError]),
+  }),
   WsGuestShareCreateRpc,
   WsServerProbeRpc,
   WsServerGetConfigRpc,
